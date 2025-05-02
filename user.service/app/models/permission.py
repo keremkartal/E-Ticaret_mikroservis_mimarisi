@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Table, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
+# ⬇️ TANIM SADECE BURADA
 role_permissions = Table(
     "role_permissions", Base.metadata,
     Column("role_id", Integer, ForeignKey("roles.id")),
@@ -11,7 +12,13 @@ role_permissions = Table(
 
 class Permission(Base):
     __tablename__ = "permissions"
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     description = Column(String, nullable=True)
-    roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
+
+    roles = relationship(
+        "Role",
+        secondary=role_permissions,
+        back_populates="permissions"
+    )

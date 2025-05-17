@@ -3,15 +3,19 @@ from typing import List, Optional, Union, Dict, Any
 from sqlalchemy.orm import Session
 from app.models.contact import Contact
 from app.schemas.contact import ContactCreate
+from sqlalchemy import delete
 
 # ─────────────────────────────────────────
 # CRUD Fonksiyonları
 # ─────────────────────────────────────────
+
 def get(db: Session, contact_id: int) -> Optional[Contact]:
     return db.query(Contact).filter(Contact.id == contact_id).first()
 
+
 def list_by_user(db: Session, user_id: int) -> List[Contact]:
     return db.query(Contact).filter(Contact.user_id == user_id).all()
+
 
 def create(db: Session, *, user_id: int, obj_in: ContactCreate) -> Contact:
     db_obj = Contact(user_id=user_id, **obj_in.dict())
@@ -19,6 +23,7 @@ def create(db: Session, *, user_id: int, obj_in: ContactCreate) -> Contact:
     db.commit()
     db.refresh(db_obj)
     return db_obj
+
 
 def update(
     db: Session,
@@ -33,8 +38,15 @@ def update(
     db.refresh(db_obj)
     return db_obj
 
-def remove(db: Session, *, contact_id: int) -> Contact:
-    obj = db.query(Contact).get(contact_id)
-    db.delete(obj)
+
+def remove(db: Session, *, contact_id: int) -> bool:
+    """
+    True dönerse satır silindi demektir.
+    """
+    result = db.execute(
+        delete(Contact).where(Contact.id == contact_id)
+    )
     db.commit()
-    return obj
+    return result.rowcount > 0
+
+

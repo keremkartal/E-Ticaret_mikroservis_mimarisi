@@ -1,8 +1,8 @@
-"""add category to address/contact & permissions m2m
+"""initial_tables_generated_locally_v2
 
-Revision ID: f9dded8e051c
-Revises: eddd0ed6eb9d
-Create Date: 2025-05-02 17:10:56.381692
+Revision ID: e6dfc23f9aef
+Revises: 
+Create Date: 2025-05-17 12:58:29.842417
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f9dded8e051c'
-down_revision: Union[str, None] = 'eddd0ed6eb9d'
+revision: str = 'e6dfc23f9aef'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -29,6 +29,14 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_permissions_id'), 'permissions', ['id'], unique=False)
     op.create_index(op.f('ix_permissions_name'), 'permissions', ['name'], unique=True)
+    op.create_table('revoked_tokens',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('jti', sa.String(), nullable=False),
+    sa.Column('revoked_at', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_revoked_tokens_id'), 'revoked_tokens', ['id'], unique=False)
+    op.create_index(op.f('ix_revoked_tokens_jti'), 'revoked_tokens', ['jti'], unique=True)
     op.create_table('roles',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
@@ -43,6 +51,7 @@ def upgrade() -> None:
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('hashed_password', sa.String(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('must_change', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
@@ -101,6 +110,9 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_roles_name'), table_name='roles')
     op.drop_index(op.f('ix_roles_id'), table_name='roles')
     op.drop_table('roles')
+    op.drop_index(op.f('ix_revoked_tokens_jti'), table_name='revoked_tokens')
+    op.drop_index(op.f('ix_revoked_tokens_id'), table_name='revoked_tokens')
+    op.drop_table('revoked_tokens')
     op.drop_index(op.f('ix_permissions_name'), table_name='permissions')
     op.drop_index(op.f('ix_permissions_id'), table_name='permissions')
     op.drop_table('permissions')

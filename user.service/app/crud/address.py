@@ -3,6 +3,7 @@ from typing import List, Optional, Union, Dict, Any
 from sqlalchemy.orm import Session
 from app.models.address import Address
 from app.schemas.address import AddressCreate, Address as AddressSchema
+from sqlalchemy import delete          # 👈 EKLE
 
 # ─────────────────────────────────────────
 # CRUD Fonksiyonları
@@ -33,6 +34,13 @@ def update(
     db.refresh(db_obj)
     return db_obj
 
-def remove(db: Session, *, address_id: int) -> Address:
-    obj = db.query(Address).get(address_id)
-    db.delete
+
+def remove(db: Session, *, address_id: int) -> bool:
+    """
+    True dönerse satır gerçekten silinmiş demektir.
+    """
+    result = db.execute(
+        delete(Address).where(Address.id == address_id)
+    )
+    db.commit()
+    return result.rowcount > 0

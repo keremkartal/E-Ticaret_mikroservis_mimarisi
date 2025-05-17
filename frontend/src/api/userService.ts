@@ -78,7 +78,8 @@ export const userService = {
                     userApi.put<ContactSchema>(`/users/me/contacts/${id}`, data),
   deleteContact:  (id: number) =>
                     userApi.delete<void>(`/users/me/contacts/${id}`),
-
+  createUser:  (u:{username:string;email:string;password:string}) =>
+                 userApi.post<UserAdminDTO>("/users",u),
   getAddresses:   () => userApi.get<AddressSchema[]>("/users/me/addresses"),
   addAddress:     (data: Omit<AddressSchema, "id" | "user_id">) =>
                     userApi.post<AddressSchema>("/users/me/addresses", data),

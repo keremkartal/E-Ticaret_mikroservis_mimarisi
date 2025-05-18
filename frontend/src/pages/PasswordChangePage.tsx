@@ -1,15 +1,12 @@
-// frontend/src/pages/ChangePassword.tsx
-// Bu dosyanın içeriği daha önce oluşturduğumuz PasswordChangePage.tsx (ID: passwordChangePage_tsx_v1) ile aynı olmalıdır.
-// Eğer farklı bir yapınız varsa, bu örnekteki force_password_change kullanımını kendi kodunuza uyarlayın.
-
+// frontend/src/pages/PasswordChangePage.tsx
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext"; // AuthContext'in doğru path'ini kontrol edin
-import { userService } from "../api/userService"; // userService'in doğru path'ini kontrol edin
+import { useAuth } from "../auth/AuthContext";
+import { userService } from "../api/userService";
 import type { PasswordChange } from "../api/userService";
 
-export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPage veya ChangePassword olarak tutabilirsiniz
+export default function PasswordChangePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -20,14 +17,14 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // HATA DÜZELTMESİ: user.must_change yerine user.force_password_change kullanılıyor
   const isForcedChange = user?.force_password_change === true;
 
   useEffect(() => {
     if (successMessage) {
+      // Başarılı mesajı gösterildikten bir süre sonra logout yap ve login'e yönlendir.
       const timer = setTimeout(() => {
-        logout(); 
-      }, 3000); 
+        logout(); // Bu, AuthContext'te tanımlandığı gibi /login'e yönlendirecektir.
+      }, 3000); // 3 saniye bekle
       return () => clearTimeout(timer);
     }
   }, [successMessage, logout, navigate]);
@@ -41,11 +38,10 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
       setError("Yeni şifreler eşleşmiyor.");
       return;
     }
-    if (newPassword.length < 8) { 
+    if (newPassword.length < 8) { // Örnek bir kural, backend ile aynı olmalı
       setError("Yeni şifre en az 8 karakter olmalıdır.");
       return;
     }
-    // HATA DÜZELTMESİ: isForcedChange kontrolü (eski user.must_change === 2 mantığı yerine)
     if (isForcedChange && oldPassword === newPassword) {
         setError("Yeni şifreniz geçici şifrenizle (e-posta adresinizle) aynı olamaz.");
         return;
@@ -54,6 +50,7 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
         setError("Yeni şifreniz eski şifrenizle aynı olamaz.");
         return;
     }
+
 
     setIsLoading(true);
     const payload: PasswordChange = {
@@ -66,6 +63,7 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
       setSuccessMessage(
         "Şifreniz başarıyla değiştirildi. Güvenliğiniz için tekrar giriş yapmanız gerekmektedir. Şimdi giriş sayfasına yönlendirileceksiniz..."
       );
+      // useEffect yukarıda logout'u tetikleyecek
     } catch (err: any) {
       setError(err.response?.data?.detail || "Şifre değiştirilirken bir hata oluştu. Lütfen girdiğiniz bilgileri kontrol edin veya daha sonra tekrar deneyin.");
     } finally {
@@ -73,6 +71,7 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
     }
   };
 
+  
   if (!user) {
     navigate("/login", { replace: true });
     return null; 
@@ -83,11 +82,9 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
       <Card style={{ maxWidth: 500, width: "100%" }}>
         <Card.Body>
           <Card.Title className="mb-4">
-            {/* HATA DÜZELTMESİ: isForcedChange kontrolü */}
             {isForcedChange ? "Yeni Şifre Oluşturun" : "Şifre Değiştir"}
           </Card.Title>
 
-          {/* HATA DÜZELTMESİ: isForcedChange kontrolü */}
           {isForcedChange && (
             <Alert variant="info">
               Güvenliğiniz için şifrenizi değiştirmeniz gerekmektedir. Lütfen
@@ -105,7 +102,7 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
             <Alert variant="success">{successMessage}</Alert>
           )}
 
-          {!successMessage && (
+          {!successMessage && ( // Şifre başarıyla değiştiyse formu tekrar gösterme
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3" controlId="oldPassword">
                 <Form.Label>Mevcut Şifre</Form.Label>
@@ -113,7 +110,6 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
                   type="password"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  // HATA DÜZELTMESİ: isForcedChange kontrolü
                   placeholder={isForcedChange ? "E-posta adresinizi girin" : "Mevcut şifreniz"}
                   required
                   disabled={isLoading}

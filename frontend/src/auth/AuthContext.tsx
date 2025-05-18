@@ -1,130 +1,137 @@
-// src/auth/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+// frontend/src/auth/AuthContext.tsx
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
 import { userApi } from "../api/axios";
-// userService'den UserOut'a artık ihtiyacımız yok, UserPayload kullanacağız.
-// import { userService, UserOut as ApiUserOut } from "../api/userService";
 
-// UserPayload, JWT token'ının içindeki payload'ı temsil eder.
-// Bu interface'in backend'deki token payload'ınızla eşleştiğinden emin olun.
 export interface UserPayload {
-  sub: string; // Genellikle username
+  sub: string;
   user_id: number;
   roles: string[];
-  permissions: string[]; // Eğer token'da permissions varsa
-  must_change: number;
+  permissions?: string[];
   is_active: boolean;
   exp?: number;
+  iat?: number;
   jti?: string;
+  force_password_change?: boolean;
 }
 
-// Context’in taşıyacağı durum ve metotlar
 export interface AuthState {
   token: string | null;
   user: UserPayload | null;
-  
+  isLoading: boolean;
   isAdmin: boolean;
-  login: (username: string, password: string) => Promise<UserPayload>; // UserPayload döndürecek
+  login: (username: string, password: string) => Promise<UserPayload>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("access_token"));
-  const [user, setUser] = useState<UserPayload | null>(() => {
-    const t = localStorage.getItem("access_token");
-    if (t) {
-      try {
-        return jwtDecode<UserPayload>(t);
-      } catch (error) {
-        console.error("Token decode edilemedi (localStorage):", error);
-        localStorage.removeItem("access_token");
-        return null;
-      }
-    }
-    return null;
-  });
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserPayload | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const isAdmin = !!user?.roles?.includes("admin");
-
-  // Token'ın geçerliliğini ve senkronizasyonunu yöneten useEffect
-  useEffect(() => {
-    const currentToken = localStorage.getItem("access_token");
-    if (currentToken) {
+  const initializeAuth = useCallback(() => {
+    setIsLoading(true);
+    const storedToken = localStorage.getItem("access_token");
+    if (storedToken) {
       try {
-        const decodedToken = jwtDecode<UserPayload>(currentToken);
+        const decodedToken = jwtDecode<UserPayload>(storedToken);
         if (decodedToken.exp && decodedToken.exp * 1000 < Date.now()) {
-          console.log("Token süresi dolmuş, logout yapılıyor (useEffect).");
-          logout(); // Token süresi dolmuşsa logout yap
+          console.log("Token süresi dolmuş, localStorage'dan temizleniyor.");
+          localStorage.removeItem("access_token");
+          setToken(null);
+          setUser(null);
         } else {
-          // Token geçerli, context state'ini senkronize et
-          if (token !== currentToken) setToken(currentToken);
-          if (!user || user.jti !== decodedToken.jti) setUser(decodedToken); // jti varsa karşılaştır
+          setToken(storedToken);
+          setUser(decodedToken);
+          userApi.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         }
       } catch (error) {
-        console.error("Token decode/validation hatası (useEffect):", error);
-        logout(); // Hata durumunda logout yap
+        console.error("Token decode edilemedi (initializeAuth):", error);
+        localStorage.removeItem("access_token");
+        setToken(null);
+        setUser(null);
       }
-    } else {
-      // Token yoksa context state'ini temizle
-      if (token !== null) setToken(null);
-      if (user !== null) setUser(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]); // Token değiştiğinde bu effect'i tekrar çalıştır (login/logout sonrası)
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   const login = async (username: string, password: string): Promise<UserPayload> => {
+    setIsLoading(true);
     const form = new URLSearchParams();
     form.append("username", username);
     form.append("password", password);
-    
+
     try {
       const response = await userApi.post<{ access_token: string; token_type: string }>(
-        "/auth/token", 
+        "/auth/token",
         form,
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }}
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
-      
       const accessToken = response.data.access_token;
       const payload = jwtDecode<UserPayload>(accessToken);
 
       if (!payload.is_active) {
-        // Kullanıcı aktif değilse hata fırlat, Login.tsx bunu yakalayacak
-        throw new Error("AccountInactive"); 
+        throw new Error("AccountInactive");
       }
 
-      // Token ve kullanıcı bilgilerini localStorage'a ve state'e kaydet
       localStorage.setItem("access_token", accessToken);
-      setToken(accessToken); // Bu, yukarıdaki useEffect'i tetikleyebilir, bu yüzden dikkatli olmalı
-      setUser(payload);      // veya useEffect'in bağımlılıklarını ayarlamalı.
-                             // Şimdilik, useEffect'in token'a bağımlı olması yeterli.
-      
-      return payload; // Login.tsx'in kullanması için payload'ı döndür
-
+      setToken(accessToken);
+      setUser(payload);
+      userApi.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      setIsLoading(false);
+      return payload;
     } catch (error: any) {
+      setIsLoading(false);
       console.error("Login hatası:", error.response?.data || error.message);
-      if (error.response?.data?.detail === "Inactive user") {
-          throw new Error("AccountInactive");
+      if (error.message === "AccountInactive" || error.response?.data?.detail === "Inactive user") {
+        throw new Error("Hesabınız aktif değil. Lütfen yönetici ile iletişime geçin.");
       }
-      // FastAPI'nin OAuth2PasswordRequestForm için varsayılan hatası genellikle 400 Bad Request'tir
-      // ve detail'de "Incorrect username or password" yazar.
-      throw new Error(error.response?.data?.detail || "Kullanıcı adı veya parola hatalı.");
+      if (error.response?.status === 400 && error.response?.data?.detail?.includes("Incorrect username or password")) {
+         throw new Error("Kullanıcı adı veya parola hatalı.");
+      }
+      if (error.response?.status === 400 && error.response?.data?.detail?.includes("User not found")) {
+         throw new Error("Kullanıcı bulunamadı.");
+      }
+      throw new Error(error.response?.data?.detail || "Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.");
     }
   };
 
-  const logout = () => {
-    // userApi.post("/auth/logout"); // Backend'de logout endpoint'i varsa çağrılabilir (opsiyonel)
+  const logout = useCallback(() => {
     localStorage.removeItem("access_token");
     setToken(null);
     setUser(null);
-    window.location.href = "/login"; // En basit yönlendirme
-  };
+    delete userApi.defaults.headers.common['Authorization'];
+  }, []);
+
+  useEffect(() => {
+    if (user?.exp) {
+      const expiresIn = (user.exp * 1000) - Date.now();
+      if (expiresIn > 0) {
+        const timer = setTimeout(() => {
+          console.log("Token süresi doldu, otomatik logout yapılıyor.");
+          logout();
+        }, expiresIn);
+        return () => clearTimeout(timer);
+      } else if (token) {
+        logout();
+      }
+    }
+    return undefined;
+  }, [user, token, logout]);
+
+
+  const isAdmin = !!user?.roles?.includes("admin");
 
   return (
     <AuthContext.Provider
-      value={{ token, user, isAdmin, login, logout }}
+      value={{ token, user, isLoading, isAdmin, login, logout }}
     >
       {children}
     </AuthContext.Provider>

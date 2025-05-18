@@ -45,16 +45,11 @@ class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = None
-    # Şifre güncellemesi genellikle ayrı bir endpoint ve şema ile yapılır (örn: PasswordChange)
-    # password: Optional[str] = None # Eğer burada şifre güncellemesi de yapılacaksa
 
 class UserOut(UserBase): # API yanıtları için kullanılacak şema
     id: int
     is_active: bool
-    # Roller için List[str] tipi kullanıldı ve varsayılan olarak boş liste atandı.
     roles: List[str] = Field(default_factory=list)
-    # must_change alanı modelinizde varsa ve int ise doğru.
-    # Eğer bool ise Optional[bool] = False gibi bir tanım daha uygun olabilir.
     must_change: int # Bu alanın amacına göre tipi (örn: bool) ve varsayılanı gözden geçirilebilir.
 
     # Pydantic V2 için model_config kullanılır, bu zaten doğru.

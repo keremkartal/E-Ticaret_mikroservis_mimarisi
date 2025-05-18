@@ -11,22 +11,12 @@ from app.crud import user as crud_user
 from app.schemas.user import ForgotPasswordRequest,ForgotPasswordResponse,UserOut
 router = APIRouter(prefix="/users", tags=["Users"])
 
-# ---------------------------------------------------------------------------
-# Helper to convert ORM <User> into UserOut with roles as List[str]
-# ---------------------------------------------------------------------------
-
 def _to_user_out(u) -> UserOut:
-    """Map ORM user to UserOut, flattening roles to list[str]."""
     data = {
         **u.__dict__,
         "roles": [r.name for r in u.roles],
     }
-    # Pydantic v2 -> model_validate supports from_attributes flag
     return UserOut.model_validate(data, from_attributes=True)
-
-# ---------------------------------------------------------------------------
-# Admin End‑point’leri
-# ---------------------------------------------------------------------------
 
 @router.get("/", response_model=List[UserOut],
             dependencies=[Depends(require_roles("admin"))])
@@ -76,16 +66,11 @@ def deactivate_user_admin(uid: int, db: Session = Depends(get_db)):
     dependencies=[Depends(require_roles("admin"))],
 )
 def activate_user_admin(uid: int, db: Session = Depends(get_db)):
-    """
-    ID ile verilen kullanıcıyı yeniden aktif eder (soft undelete).
-    Sadece admin erişebilir.
-    """
     user_obj = crud_user.get_user(db, uid)
     if not user_obj:
         raise HTTPException(status_code=404, detail="User not found")
 
     crud_user.activate(db, uid)
-    # user_obj.is_active artık True oldu, geri dön
     return _to_user_out(user_obj)
 
 @router.put("/{uid:int}/roles", response_model=UserOut,
@@ -106,10 +91,6 @@ def reset_user_password(uid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     new_pwd = crud_user.reset_password(db, uid, "Temp1234!")
     return {"detail": "password reset", "new_password": new_pwd}
-
-# ---------------------------------------------------------------------------
-# Self End‑point’leri
-# ---------------------------------------------------------------------------
 
 @router.get("/me", response_model=UserOut)
 def me(current_user=Depends(get_current_active_user)):
@@ -137,9 +118,6 @@ def deactivate_self(db: Session = Depends(get_db),
     crud_user.deactivate(db, current_user.id)
 
 
-#########################
-
-# ─────────────────────── Kullanıcı “Şifremi Unuttum” ──────────────────────
 @router.post(
     "/forgot-password",
     response_model=ForgotPasswordResponse,
@@ -150,32 +128,24 @@ def forgot_password(
     db: Session = Depends(get_db),
 ):
     user = crud_user.get_by_username_and_email(
-        db, req.username, req.email
+        db, username=req.username, email=req.email
     )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kullanıcı bulunamadı"
+            detail="Sağlanan kullanıcı adı ve e-posta ile eşleşen kullanıcı bulunamadı."
         )
-    # Zaten admin atamış geçici şifreyi ver
-    if user.must_change == 2:
-        temp = f"{user.username}{user.email}"
-        return {
-            "detail": "Geçici şifreniz hazır",
-            "temporary_password": temp
-        }
-    # Daha önce talep edilmişse sadece onayla
-    if user.must_change == 1:
-        return {
-            "detail": "Talebiniz alınmış, admin onay bekliyor"
-        }
-    # 0 ise ilk talep, must_change=1 yap
-    crud_user.request_password_reset(db, user)
-    return {
-        "detail": "Talebiniz alındı; admin onayladıktan sonra bilgilendirileceksiniz"
-    }
 
-# ─────────────────────── Admin “Şifre Unutanlar” ──────────────────────
+    if user.must_change == 1:
+        return ForgotPasswordResponse(
+            detail="Şifre sıfırlama talebiniz zaten alınmış. Yöneticinizin şifrenizi sıfırlamasını bekleyiniz."
+        )
+
+    crud_user.request_password_reset(db, user)
+    return ForgotPasswordResponse(
+        detail="Şifre sıfırlama talebiniz alındı. Yöneticiniz şifrenizi (e-posta adresiniz olarak) sıfırladıktan sonra, geçici şifreniz olan e-posta adresinizle giriş yapabilirsiniz."
+    )
+
 from app.crud.user import list_password_requests as crud_list_pr
 
 @router.get(
@@ -207,7 +177,6 @@ def admin_reset_password(uid: int, db: Session = Depends(get_db)):
         "temporary_password": temp
     }
 
-# ─────────────────────── Mevcut “Şifre Değiştir” (PUT /me/password) ──────────────────────
 @router.put(
     "/me/password",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -217,11 +186,71 @@ def change_pwd(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_active_user),
 ):
-    # must_change=2 ise eski şifre kontrolünü atla
     if current_user.must_change != 2:
         if not body.old_password:
             raise HTTPException(400, "Eski şifre gereklidir")
         if not crud_user.verify_password(body.old_password, current_user.hashed_password):
             raise HTTPException(400, "Eski şifre hatalı")
     
+    crud_user.update_password(db, current_user, body.new_password)
+
+
+@router.post(
+    "/{uid:int}/admin-set-email-password",
+    response_model=dict,
+    dependencies=[Depends(require_roles("admin"))],
+    summary="Admin: Kullanıcı şifresini e-postasına sıfırlar"
+)
+def admin_set_user_password_to_email(uid: int, db: Session = Depends(get_db)):
+    user = crud_user.get_user(db, uid)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kullanıcı bulunamadı")
+
+    if user.must_change != 1:
+       
+        pass
+
+    try:
+        temporary_password = crud_user.admin_reset_password_to_email(db, user)
+        return {
+            "detail": "Kullanıcının şifresi e-posta adresi olarak ayarlandı.",
+            "temporary_password_is_email": temporary_password
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+
+
+@router.put(
+    "/me/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Mevcut kullanıcı kendi şifresini değiştirir"
+)
+def change_current_user_password(
+    body: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user),
+    
+):
+
+    if not body.old_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Eski şifre gereklidir."
+        )
+
+    if not crud_user.verify_password(body.old_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Eski şifre hatalı."
+        )
+
+    if body.old_password == body.new_password:
+         raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Yeni şifre eski şifre ile aynı olamaz."
+        )
+
     crud_user.update_password(db, current_user, body.new_password)

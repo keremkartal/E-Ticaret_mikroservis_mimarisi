@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 import Dashboard from "./Dashboard";
 import UsersList from "./UsersList";
-import PasswordRequests from "./PasswordRequests";
+// import PasswordRequests from "./PasswordRequests";
 import AdminProductsList from "./AdminProductsList";
 
 export default function AdminRoutes() {
@@ -13,10 +13,10 @@ export default function AdminRoutes() {
         <Route path="users" element={<UsersList />} />
         <Route path="products" element={<AdminProductsList />} />
 
-       <Route
+       {/* <Route
          path="password-requests"
          element={<PasswordRequests />}
-       />
+       /> */}
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
     </Routes>

@@ -14,7 +14,6 @@ export default function ContactForm({ initialData, onSaved }: Props) {
   const [detail, setDetail]     = useState(initialData?.detail ?? "");
   const [category, setCategory] = useState(initialData?.category ?? "Ev");
 
-  // initialData değiştiğinde formu resetle
   useEffect(() => {
     if (initialData) {
       setType(initialData.type);

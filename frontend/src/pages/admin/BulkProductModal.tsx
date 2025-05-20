@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/BulkProductModal.tsx
 import React, { useEffect, useState } from "react";
 import {
   Modal,
@@ -26,7 +25,6 @@ export default function BulkProductModal({
   onClose: () => void;
   onBulkCreated: () => void;
 }) {
-  // Dinamik satırlar için array
   const [rows, setRows] = useState<ProductCreate[]>([
     { name: "", description: "", price: 0, stock: 0, is_visible: true, category_id: null },
   ]);
@@ -34,22 +32,18 @@ export default function BulkProductModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Kategorileri yükle
   useEffect(() => {
     categoryService.listCategories()
       .then(r => setCategories(r.data))
-      .catch(() => {/* Hata sessizce geç */});
+      .catch(() => {});
   }, []);
 
-  // Satır ekle
   const addRow = () =>
     setRows([...rows, { name: "", description: "", price: 0, stock: 0, is_visible: true, category_id: null }]);
 
-  // Satır sil (index’e göre)
   const removeRow = (i: number) =>
     setRows(rows.filter((_, idx) => idx !== i));
 
-  // Bir hücre değişti
   const updateCell = (i: number, field: keyof ProductCreate, value: any) => {
     const newRows = [...rows];
     // @ts-ignore
@@ -57,13 +51,11 @@ export default function BulkProductModal({
     setRows(newRows);
   };
 
-  // Gönder
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      // Filtre: adı boş olan satırları atla
       const payload = rows.filter(r => r.name.trim() !== "");
       if (payload.length === 0) {
         setError("En az bir ürün adı girmeniz gerekiyor.");

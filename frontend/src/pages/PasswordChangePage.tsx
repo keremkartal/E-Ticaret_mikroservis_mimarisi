@@ -63,7 +63,6 @@ export default function PasswordChangePage() {
       setSuccessMessage(
         "Şifreniz başarıyla değiştirildi. Güvenliğiniz için tekrar giriş yapmanız gerekmektedir. Şimdi giriş sayfasına yönlendirileceksiniz..."
       );
-      // useEffect yukarıda logout'u tetikleyecek
     } catch (err: any) {
       setError(err.response?.data?.detail || "Şifre değiştirilirken bir hata oluştu. Lütfen girdiğiniz bilgileri kontrol edin veya daha sonra tekrar deneyin.");
     } finally {

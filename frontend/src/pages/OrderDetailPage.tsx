@@ -24,7 +24,6 @@ export default function OrderDetailPage() {
       return;
     }
 
-    // 1) Tüm siparişleri alıp bu ID'nin hangi sırada olduğunu bul
     orderService.listOrders()
       .then(r => {
         const list = r.data;
@@ -32,10 +31,8 @@ export default function OrderDetailPage() {
         if (idx >= 0) setOrderNo(idx + 1);
       })
       .catch(() => {
-        /* hata olur ise ses çıkarmayalım */
       });
 
-    // 2) Sipariş detayını al
     orderService.getOrder(+id)
       .then(r => setOrder(r.data))
       .catch(() => setError("Sipariş bulunamadı"))

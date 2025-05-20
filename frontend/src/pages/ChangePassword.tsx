@@ -1,15 +1,11 @@
-// frontend/src/pages/ChangePassword.tsx
-// Bu dosyanın içeriği daha önce oluşturduğumuz PasswordChangePage.tsx (ID: passwordChangePage_tsx_v1) ile aynı olmalıdır.
-// Eğer farklı bir yapınız varsa, bu örnekteki force_password_change kullanımını kendi kodunuza uyarlayın.
-
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext"; // AuthContext'in doğru path'ini kontrol edin
-import { userService } from "../api/userService"; // userService'in doğru path'ini kontrol edin
+import { useAuth } from "../auth/AuthContext"; 
+import { userService } from "../api/userService"; 
 import type { PasswordChange } from "../api/userService";
 
-export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPage veya ChangePassword olarak tutabilirsiniz
+export default function ChangePasswordPage() { 
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -20,7 +16,6 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // HATA DÜZELTMESİ: user.must_change yerine user.force_password_change kullanılıyor
   const isForcedChange = user?.force_password_change === true;
 
   useEffect(() => {
@@ -45,7 +40,6 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
       setError("Yeni şifre en az 8 karakter olmalıdır.");
       return;
     }
-    // HATA DÜZELTMESİ: isForcedChange kontrolü (eski user.must_change === 2 mantığı yerine)
     if (isForcedChange && oldPassword === newPassword) {
         setError("Yeni şifreniz geçici şifrenizle (e-posta adresinizle) aynı olamaz.");
         return;
@@ -83,11 +77,9 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
       <Card style={{ maxWidth: 500, width: "100%" }}>
         <Card.Body>
           <Card.Title className="mb-4">
-            {/* HATA DÜZELTMESİ: isForcedChange kontrolü */}
             {isForcedChange ? "Yeni Şifre Oluşturun" : "Şifre Değiştir"}
           </Card.Title>
 
-          {/* HATA DÜZELTMESİ: isForcedChange kontrolü */}
           {isForcedChange && (
             <Alert variant="info">
               Güvenliğiniz için şifrenizi değiştirmeniz gerekmektedir. Lütfen
@@ -113,7 +105,6 @@ export default function ChangePasswordPage() { // Sayfa adını ChangePasswordPa
                   type="password"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  // HATA DÜZELTMESİ: isForcedChange kontrolü
                   placeholder={isForcedChange ? "E-posta adresinizi girin" : "Mevcut şifreniz"}
                   required
                   disabled={isLoading}

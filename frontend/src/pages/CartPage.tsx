@@ -10,16 +10,15 @@ import {
 } from "react-bootstrap";
 import { cartService } from "../api/cartService";
 import type { CartOut, CartItemOut } from "../api/cartService";
-import { useNavigate } from "react-router-dom";    // ← ekledik
+import { useNavigate } from "react-router-dom";   
 
 export default function CartPage() {
   const [cart, setCart]             = useState<CartOut | null>(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<number, number>>({});
-  const navigate = useNavigate();                  // ← burada tanımla
+  const navigate = useNavigate();                  
 
-  // 1) reload artık async
   const reload = async () => {
     setLoading(true);
     setError(null);
@@ -42,7 +41,6 @@ export default function CartPage() {
     void reload();
   }, []);
 
-  // 2) handleUpdate içinde await reload()
   const handleUpdate = async (item: CartItemOut) => {
     const newQty = quantities[item.product_id];
     if (newQty < 1) {
@@ -54,7 +52,6 @@ export default function CartPage() {
     setError(null);
     try {
       await cartService.updateItem(item.product_id, newQty);
-      // sepete tekrar fetch at
       await reload();
     } catch {
       setError("Güncelleme başarısız");

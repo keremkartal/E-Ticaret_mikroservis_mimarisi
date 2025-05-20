@@ -1,104 +1,91 @@
-# docker-compose.yml
-
 version: '3.8'
 
 services:
-  # User Service için Veritabanı
   user_db:
     image: postgres:13-alpine
     container_name: user_postgres_db
     environment:
       POSTGRES_USER: microuser
       POSTGRES_PASSWORD: micro_pass
-      POSTGRES_DB: e_commerce_user # .env dosyanızdaki ile aynı olmalı
+      POSTGRES_DB: e_commerce_user
     volumes:
       - user_postgres_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
     networks:
       - ecomm_network
-    healthcheck: # user_db İÇİN HEALTHCHECK AKTİF
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U microuser -d e_commerce_user -q"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s # DB'nin başlaması için ek süre
+      start_period: 10s
 
-  # Product Service için Veritabanı
   product_db:
     image: postgres:13-alpine
     container_name: product_postgres_db
     environment:
       POSTGRES_USER: microprod
       POSTGRES_PASSWORD: prod_pass
-      POSTGRES_DB: e_commerce_product # .env dosyanızdaki ile aynı olmalı
+      POSTGRES_DB: e_commerce_product
     volumes:
       - product_postgres_data:/var/lib/postgresql/data
     ports:
       - "5434:5432"
     networks:
       - ecomm_network
-    healthcheck: # product_db İÇİN HEALTHCHECK AKTİF
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U microprod -d e_commerce_product -q"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
-  # User Service
   user_service:
     build:
       context: ./user.service
       dockerfile: Dockerfile
     container_name: user_api_service
-    command: /app/entrypoint.sh # entrypoint.sh migration ve bootstrap'i yönetecek
+    command: /app/entrypoint.sh
     volumes:
-      - ./user.service:/app # Tüm user.service klasörünü bağla
+      - ./user.service:/app
     ports:
       - "8000:8000"
-    depends_on: # user_service İÇİN DEPENDS_ON KOŞULU AKTİF
+    depends_on:
       user_db:
-        condition: service_healthy # user_db sağlıklı olana kadar bekle
+        condition: service_healthy
     environment:
       PYTHONUNBUFFERED: 1
     networks:
       - ecomm_network
 
-  # Product Service
   product_service:
     build:
       context: ./product.service
       dockerfile: Dockerfile
     container_name: product_api_service
-    # --access-log bayrağı eklendi
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload --access-log
     volumes:
       - ./product.service:/app
     ports:
       - "8001:8001"
-    depends_on: # product_service İÇİN DEPENDS_ON KOŞULLARI AKTİF
+    depends_on:
       product_db:
-        condition: service_healthy # product_db sağlıklı olana kadar bekle
-      user_service: # user_service başladıktan sonra başla
+        condition: service_healthy
+      user_service:
         condition: service_started
     environment:
       PYTHONUNBUFFERED: 1
     networks:
       - ecomm_network
 
-  # Frontend (React) Servisi - YENİ EKLENDİ
   frontend:
     build:
-      context: ./frontend # React uygulamanızın bulunduğu klasör (örn: ./frontend)
-      dockerfile: Dockerfile # FRONTEND/Dockerfile dosyasını kullanacak
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: react_frontend_app
     ports:
-      - "5173:80" # Host'taki 5173 portunu Nginx container'ının 80 portuna yönlendir
-    # React uygulamanızın API adreslerini bilmesi için ortam değişkenleri.
-    # Create React App için REACT_APP_, Vite için VITE_ ile başlamalıdır.
-    # Bu değişkenler Nginx container'ının ortamına set edilir.
-    # React build'inizin bu değişkenleri kullanması için ek yapılandırma gerekebilir
-    # veya React kodunuz API'lere doğrudan http://localhost:8000 gibi adreslerle erişebilir.
+      - "5173:80"
     environment:
       REACT_APP_USER_SERVICE_URL: http://localhost:8000
       REACT_APP_PRODUCT_SERVICE_URL: http://localhost:8001

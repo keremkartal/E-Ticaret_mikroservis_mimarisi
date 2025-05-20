@@ -18,7 +18,6 @@ export default function ProductFormModal({ product, onClose }: Props) {
   const [stock, setStock]         = useState(product?.stock ?? 0);
   const [isVisible, setIsVisible] = useState(product?.is_visible ?? true);
 
-  // Yeni: kategori listesi ve seçilen kategori
   const [categories, setCategories]       = useState<CategoryOut[]>([]);
   const [categoryId, setCategoryId]       = useState<number | "">(
     product?.category?.id ?? ""
@@ -27,7 +26,6 @@ export default function ProductFormModal({ product, onClose }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState<string | null>(null);
 
-  // Mevcut ürüne göre formu doldur
   useEffect(() => {
     if (product) {
       setName(product.name);
@@ -39,13 +37,11 @@ export default function ProductFormModal({ product, onClose }: Props) {
     }
   }, [product]);
 
-  // Kategorileri yükle
   useEffect(() => {
     categoryService
       .listCategories()
       .then(r => setCategories(r.data))
       .catch(() => {
-        /* hata yönetimi isterseniz buraya */
       });
   }, []);
 
@@ -60,7 +56,6 @@ export default function ProductFormModal({ product, onClose }: Props) {
       price,
       stock,
       is_visible: isVisible,
-      // boş seçildiyse null, değilse sayı
       category_id: categoryId === "" ? null : categoryId,
     };
 
@@ -86,7 +81,7 @@ export default function ProductFormModal({ product, onClose }: Props) {
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
         <Form onSubmit={handleSubmit}>
-          {/* Ad, Açıklama, Fiyat, Stok, Görünür... */}
+          {}
           <Form.Group className="mb-3">
             <Form.Label>Ad</Form.Label>
             <Form.Control
@@ -130,7 +125,6 @@ export default function ProductFormModal({ product, onClose }: Props) {
             />
           </Form.Group>
 
-          {/* Yeni: Kategori seçimi */}
           <Form.Group className="mb-3">
             <Form.Label>Kategori</Form.Label>
             <Form.Select

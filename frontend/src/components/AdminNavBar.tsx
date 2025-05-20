@@ -1,51 +1,47 @@
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Navbar, Nav, Container, NavDropdown } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 import { useAuth } from "../auth/AuthContext";
-import { getMe } from "../api/auth";
-import type { MeResponse } from "../api/auth";
 
 export default function AdminNavBar() {
-  const { logout } = useAuth();
-  const [me, setMe] = useState<MeResponse | null>(null);
-
-  useEffect(() => {
-    getMe()
-      .then(res => setMe(res.data))
-      .catch(() => setMe(null));
-  }, []);
+  const { logout, user } = useAuth();
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" className="mb-3">
-      <Container>
-        <Navbar.Brand>Admin Panel</Navbar.Brand>
-        <Navbar.Toggle aria-controls="admin-nav" />
-        <Navbar.Collapse id="admin-nav">
+      <Container fluid>
+        <LinkContainer to="/admin">
+          <Navbar.Brand>Admin Paneli</Navbar.Brand>
+        </LinkContainer>
+        <Navbar.Toggle aria-controls="admin-navbar-nav" />
+        <Navbar.Collapse id="admin-navbar-nav">
           <Nav className="me-auto">
-            <LinkContainer to="/admin/users">
-              <Nav.Link>Users</Nav.Link>
+            <LinkContainer to="/admin/dashboard">
+              <Nav.Link>Gösterge Paneli</Nav.Link>
             </LinkContainer>
-            <LinkContainer to="/admin/password-requests">
-              <Nav.Link>Şifre Unutanlar</Nav.Link>
+            <LinkContainer to="/admin/users">
+              <Nav.Link>Kullanıcılar</Nav.Link>
+            </LinkContainer>
+            <LinkContainer to="/admin/roles">
+              <Nav.Link>Rol Yönetimi</Nav.Link>
             </LinkContainer>
             <LinkContainer to="/admin/products">
-              <Nav.Link>Products</Nav.Link>
-            </LinkContainer>
-            <LinkContainer to="/profile">
-              <Nav.Link>Profile</Nav.Link>
+              <Nav.Link>Ürünler</Nav.Link>
             </LinkContainer>
           </Nav>
 
           <Nav className="ms-auto">
-            {me && (
+            {user && (
               <NavDropdown
-                title={`${me.username} (${me.email})`}
+                title={`Merhaba, ${user.sub}`}
                 id="admin-user-menu"
                 align="end"
               >
+                <LinkContainer to="/profile">
+                  <NavDropdown.Item>Profilim (Admin)</NavDropdown.Item>
+                </LinkContainer>
+                <NavDropdown.Divider />
                 <NavDropdown.Item onClick={logout}>
-                  Logout
+                  Çıkış Yap
                 </NavDropdown.Item>
               </NavDropdown>
             )}

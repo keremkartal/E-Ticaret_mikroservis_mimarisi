@@ -24,7 +24,6 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const navigate = useNavigate();
 
-  // Yükle: sepet + adresler
   useEffect(() => {
     setLoading(true);
     Promise.all([cartService.getCart(), userService.getAddresses()])
@@ -61,7 +60,6 @@ export default function CheckoutPage() {
       <h2>Ödeme & Adres Seçimi</h2>
       {error && <Alert variant="danger">{error}</Alert>}
 
-      {/* Adres seçimi */}
       <Form.Group className="mb-4">
         <Form.Label>Gönderim Adresiniz</Form.Label>
         <Form.Select

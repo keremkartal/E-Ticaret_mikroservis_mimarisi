@@ -1,4 +1,3 @@
-// frontend/src/components/NavBar.tsx
 import React, { useEffect, useState } from "react";
 import { getMe } from "../api/auth";
 import type { MeResponse } from "../api/auth";
@@ -11,7 +10,6 @@ export default function NavBar() {
   const { logout, isAdmin } = useAuth();
   const [me, setMe] = useState<MeResponse | null>(null);
 
-  // Eğer admin ise, bu NavBar hiç render edilmesin
   if (isAdmin) {
     return null;
   }
@@ -22,7 +20,6 @@ export default function NavBar() {
       .catch(() => setMe(null));
   }, []);
 
-  // Henüz kullanıcı bilgisi yoksa (yükleniyorsa) de göstermeyebiliriz
   if (!me) {
     return null;
   }

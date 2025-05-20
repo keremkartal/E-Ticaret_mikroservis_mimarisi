@@ -10,7 +10,6 @@ export default function Dashboard() {
   const [featured, setFeatured] = useState<ProductOut[]>([]);
 
   useEffect(() => {
-    // En yeni 4 ürünü çeker
     productService.listProducts(0, 4)
       .then(res => setFeatured(res.data))
       .catch(() => setFeatured([]));
@@ -20,7 +19,6 @@ export default function Dashboard() {
     <Container className="my-4">
       <h2 className="mb-4">Hoş geldiniz, {user?.sub}!</h2>
 
-      {/* Hızlı Erişim Kartları */}
       <Row className="g-4 mb-5">
         <Col xs={12} md={4}>
           <Card
@@ -57,7 +55,6 @@ export default function Dashboard() {
         </Col>
       </Row>
 
-      {/* Öne Çıkan Ürünler */}
       <h4 className="mb-3">Öne Çıkan Ürünler</h4>
       <Row className="g-4">
         {featured.map(product => (

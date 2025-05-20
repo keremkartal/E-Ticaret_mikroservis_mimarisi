@@ -1,9 +1,8 @@
 // frontend/src/pages/ForgotPassword.tsx
 import React, { useState } from "react";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
-import { Link } from "react-router-dom"; // Link eklendi
+import { Link } from "react-router-dom";
 import { userService } from "../api/userService";
-// UserForgotPasswordResponse'u userService'den import ediyoruz
 import type { ForgotPasswordRequest, UserForgotPasswordResponse } from "../api/userService";
 
 export default function ForgotPassword() {
@@ -17,24 +16,17 @@ export default function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    setVariant("info"); // Başlangıç varyantı
+    setVariant("info");
 
     const payload: ForgotPasswordRequest = { username, email };
     try {
-      // userService'deki forgotPassword fonksiyonu artık UserForgotPasswordResponse döndürüyor
       const response = await userService.forgotPassword(payload);
-      // Axios'tan gelen data objesini doğrudan kullanıyoruz
       const data: UserForgotPasswordResponse = response.data;
 
-      // Backend artık bu endpoint'te geçici şifre DÖNDÜRMÜYOR.
-      // Sadece bir onay mesajı veriyor.
-      // if (data.temporary_password) { ... } bloğu kaldırıldı.
-
-      setVariant("success"); // Başarılı talep için success varyantı
-      setMessage(data.detail); // Backend'den gelen mesajı göster
-      setUsername(""); // Formu temizle
-      setEmail("");    // Formu temizle
-
+      setVariant("success");
+      setMessage(data.detail);
+      setUsername("");
+      setEmail("");
     } catch (err: any) {
       setVariant("danger");
       setMessage(err.response?.data?.detail || "Şifre sıfırlama talebi gönderilirken bir hata oluştu. Lütfen bilgilerinizi kontrol edin.");
@@ -55,8 +47,6 @@ export default function ForgotPassword() {
             </Alert>
           )}
 
-          {/* Başarılı mesajı gösterildiğinde formu gizleyebiliriz veya sadece inputları temizleyebiliriz */}
-          {/* Şimdilik formu her zaman gösteriyoruz, kullanıcı yeni bir talep gönderebilir. */}
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3" controlId="fpUsername">
               <Form.Label>Kullanıcı Adı</Form.Label>

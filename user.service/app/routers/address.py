@@ -16,10 +16,8 @@ def list_addresses(
     current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """List all addresses of the current user."""
     return list_by_user(db, current_user.id)
 
-# app/routers/addresses.py  (mevcut dosyanızın devamı)
 
 @router.get("/{address_id}", response_model=Address)
 def get_addr(
@@ -27,10 +25,7 @@ def get_addr(
     current_user = Depends(get_current_active_user),
     db: Session   = Depends(get_db),
 ):
-    """
-    Belirli bir `address_id` değerine sahip adresi getirir
-    (yalnızca o adrese sahip olan kullanıcı erişebilir).
-    """
+    
     addr = get_address(db, address_id)
     if not addr or addr.user_id != current_user.id:
         raise HTTPException(
@@ -55,7 +50,6 @@ def update_addr(
     current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Update an existing address."""
     addr = get_address(db, address_id)
     if not addr or addr.user_id != current_user.id:
         raise HTTPException(
@@ -70,7 +64,6 @@ def delete_addr(
     current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Delete an address."""
     addr = get_address(db, address_id)
     if not addr or addr.user_id != current_user.id:
         raise HTTPException(

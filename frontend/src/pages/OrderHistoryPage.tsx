@@ -40,7 +40,6 @@ export default function OrderHistoryPage() {
           <tbody>
             {orders.map((o, idx) => (
               <tr key={o.id}>
-                {/* Kullanıcının kendi sıralı numarası */}
                 <td>{idx + 1}</td>
                 <td>{new Date(o.created_at).toLocaleString()}</td>
                 <td>{parseFloat(o.total_amount).toFixed(2)}</td>

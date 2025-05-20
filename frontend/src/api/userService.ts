@@ -1,4 +1,3 @@
-// frontend/src/api/userService.ts
 import { userApi } from "./axios";
 import type { AxiosResponse } from "axios";
 
@@ -61,6 +60,37 @@ export interface AddressSchema {
   postal_code: string;
 }
 
+// Rol ve İzin Arayüzleri
+export interface RoleBase {
+  name: string; 
+  description?: string | null;
+}
+
+export interface RoleCreate extends RoleBase {}
+
+export interface RoleUpdate {
+  name?: string; 
+  description?: string | null; 
+}
+
+export interface Role extends RoleBase {
+  id: number;
+  permissions: string[];
+}
+
+export interface PermissionBase { 
+  name: string;
+  description?: string | null;
+}
+
+export interface PermissionCreate extends PermissionBase {} 
+
+export interface Permission extends PermissionBase { 
+  id: number;
+  
+}
+
+
 export const userService = {
   checkLogin: () => userApi.get<{ valid: boolean }>("/auth/checkLogin"),
   getMe: () => userApi.get<UserOut>("/users/me"),
@@ -93,16 +123,38 @@ export const adminService = {
   listUsers: () => userApi.get<UserAdminDTO[]>("/users"),
   getUser: (id: number) => userApi.get<UserAdminDTO>(`/users/${id}`),
   createUser: (u: { username: string; email: string; password: string }) =>
-    userApi.post<UserAdminDTO>("/users", u),
+    userApi.post<UserAdminDTO>("/users", u), 
   updateUser: (id: number, body: Partial<Omit<UserAdminDTO, "id" | "roles">>) =>
-    userApi.put<UserAdminDTO>(`/users/${id}`, body),
+    userApi.put<UserAdminDTO>(`/users/${id}`, body), 
   deactivateUser: (id: number) => userApi.delete<void>(`/users/${id}`),
   activateUser: (id: number) =>
-    userApi.put<UserAdminDTO>(`/users/${id}/activate`, {}),
+    userApi.put<UserAdminDTO>(`/users/${id}/activate`, {}), 
   listPasswordRequests: () =>
     userApi.get<UserOut[]>("/users/password-requests"),
   adminSetUserPasswordToEmail: (uid: number) =>
     userApi.post<AdminResetPasswordResponse>(`/users/${uid}/admin-set-email-password`, {}),
-  setUserRoles: (userId: number, roleIds: number[]): Promise<AxiosResponse<UserOut>> =>
+  setUserRoles: (userId: number, roleIds: number[]): Promise<AxiosResponse<UserOut>> => 
     userApi.put<UserOut>(`/users/${userId}/roles`, roleIds),
+
+  listRoles: (): Promise<AxiosResponse<Role[]>> => 
+    userApi.get<Role[]>("/roles/"),
+  createRole: (data: RoleCreate): Promise<AxiosResponse<Role>> =>
+    userApi.post<Role>("/roles/", data),
+  getRole: (roleId: number): Promise<AxiosResponse<Role>> =>
+    userApi.get<Role>(`/roles/${roleId}`),
+  updateRole: (roleId: number, data: RoleUpdate): Promise<AxiosResponse<Role>> =>
+    userApi.put<Role>(`/roles/${roleId}`, data),
+  deleteRole: (roleId: number): Promise<AxiosResponse<void>> => 
+    userApi.delete<void>(`/roles/${roleId}`),
+
+  setRolePermissions: (roleId: number, permissionIds: number[]): Promise<AxiosResponse<Role>> =>
+    userApi.put<Role>(`/roles/${roleId}/permissions`, permissionIds), 
+  addPermissionToRole: (roleId: number, permissionId: number): Promise<AxiosResponse<Role>> =>
+    userApi.post<Role>(`/roles/${roleId}/permissions/${permissionId}`),
+  
+  listPermissions: (): Promise<AxiosResponse<Permission[]>> =>
+    userApi.get<Permission[]>("/permissions/"), 
+  createPermission: (data: PermissionCreate): Promise<AxiosResponse<Permission>> =>
+    userApi.post<Permission>("/permissions/", data),
+ 
 };

@@ -15,7 +15,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    must_change      = Column(Integer, default=0, nullable=False)  # ← artık Integer
+    must_change      = Column(Integer, default=0, nullable=False) 
     roles = relationship("Role", secondary=user_roles, back_populates="users")
     addresses = relationship("Address", back_populates="user")
     contacts = relationship("Contact", back_populates="user")

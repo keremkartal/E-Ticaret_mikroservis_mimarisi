@@ -1,40 +1,34 @@
 // frontend/src/pages/Login.tsx
 import React, { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
-import 'bootstrap/dist/css/bootstrap.min.css'; // Bootstrap CSS'ini de import edin (gerekliyse)
+import 'bootstrap/dist/css/bootstrap.min.css';
 import type { UserPayload } from "../auth/AuthContext";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { Card, Form, Button, Alert } from 'react-bootstrap'; // Bu satırları ekleyin
-import 'bootstrap/dist/css/bootstrap.min.css'; // Bootstrap CSS'ini de import edin (gerekliyse)
+import { Card, Form, Button, Alert } from 'react-bootstrap';
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Yükleme durumu eklendi
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth(); // isAdmin'a burada ihtiyacımız yok, payload'dan kontrol edeceğiz
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // Yönlendirme sonrası "from" state'i için
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true); // Yükleme başladı
+    setIsLoading(true);
 
     try {
       const userPayload: UserPayload = await login(username, password);
 
-      // YENİ: force_password_change bayrağını kontrol et
-      if (userPayload.force_password_change === true) {
-        // Kullanıcıyı şifre değiştirme sayfasına yönlendir
-        // Şifre değiştirme sonrası nereye döneceğini state ile belirtebiliriz (opsiyonel)
+      if (userPayload.force_password_change) {
         navigate("/password-change", { replace: true, state: { from: location.state?.from || "/" } });
       } else {
-        // Şifre değişikliği gerekmiyorsa, rollere göre yönlendir
         const isAdmin = userPayload.roles?.includes("admin");
         const from = location.state?.from?.pathname || (isAdmin ? "/admin/dashboard" : "/");
-        
         if (isAdmin) {
           navigate(from.startsWith("/admin") ? from : "/admin/dashboard", { replace: true });
         } else {
@@ -42,28 +36,23 @@ export default function Login() {
         }
       }
     } catch (err: any) {
-      // AuthContext'teki login fonksiyonundan fırlatılan hataları yakala
-      // Hata mesajları AuthContext'te daha spesifik hale getirilmişti.
       setError(err.message || "Giriş sırasında bilinmeyen bir hata oluştu.");
     } finally {
-      setIsLoading(false); // Yükleme bitti
+      setIsLoading(false);
     }
   };
 
   return (
-    <div
-      className="d-flex justify-content-center align-items-center"
-      style={{ minHeight: "80vh" }} // minHeight daha iyi olabilir
-    >
-      <Card style={{ width: "100%", maxWidth: 400 }}> {/* Card bileşeni eklendi */}
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "80vh" }}>
+      <Card style={{ width: "100%", maxWidth: 400 }}>
         <Card.Body>
-          <h2 className="mb-4 text-center">Giriş Yap</h2> {/* Başlık güncellendi ve ortalandı */}
-          {error && <Alert variant="danger">{error}</Alert>} {/* Alert bileşeni kullanıldı */}
-          <Form onSubmit={handleSubmit}> {/* Form bileşeni kullanıldı */}
+          <h2 className="mb-4 text-center">Giriş Yap</h2>
+          {error && <Alert variant="danger">{error}</Alert>}
+          <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3" controlId="loginUsername">
               <Form.Label>Kullanıcı Adı</Form.Label>
               <Form.Control
-                type="text" // type eklendi
+                type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Kullanıcı adınızı girin"
@@ -85,7 +74,7 @@ export default function Login() {
             <Button variant="primary" className="w-100" type="submit" disabled={isLoading}>
               {isLoading ? "Giriş Yapılıyor..." : "Giriş Yap"}
             </Button>
-            <div className="text-center mt-3"> {/* Link ortalandı */}
+            <div className="text-center mt-3">
               <Link to="/forgot-password">Şifremi Unuttum?</Link>
             </div>
           </Form>

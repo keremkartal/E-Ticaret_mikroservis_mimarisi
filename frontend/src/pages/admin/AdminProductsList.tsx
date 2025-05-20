@@ -2,11 +2,11 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Container, Spinner, Alert } from "react-bootstrap";
 import { productService } from "../../api/productService";
-import { categoryService } from "../../api/categoryService"; // categoryService import edildi
+import { categoryService } from "../../api/categoryService";
 import ProductFormModal from "./ProductFormModal";
 import BulkProductModal from "./BulkProductModal";
 import type { ProductOut } from "../../api/productService";
-import type { CategoryCreate } from "../../api/categoryService"; // CategoryCreate tipi import edildi
+import type { CategoryCreate } from "../../api/categoryService";
 
 export default function AdminProductsList() {
   const [products, setProducts] = useState<ProductOut[]>([]);
@@ -16,13 +16,12 @@ export default function AdminProductsList() {
   const [editing, setEditing] = useState<ProductOut | null>(null);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
-  // Kategori oluşturma işlemi için mesaj state'i
   const [categoryMessage, setCategoryMessage] = useState<string | null>(null);
   const [categoryMessageType, setCategoryMessageType] = useState<"success" | "danger">("success");
 
-  const reloadProducts = () => { // reload -> reloadProducts (daha açıklayıcı)
+  const reloadProducts = () => {
     setLoading(true);
-    setError(null); // Hata mesajını temizle
+    setError(null);
     productService.listProducts()
       .then(r => setProducts(r.data))
       .catch(e => {
@@ -36,9 +35,9 @@ export default function AdminProductsList() {
 
   const handleDelete = async (p: ProductOut) => {
     const productNameInput = window.prompt(`"${p.name}" ürününü silmek için ürün adını tam olarak girin:`);
-    if (productNameInput === null) { // Kullanıcı iptal etti
-        alert("Silme işlemi iptal edildi.");
-        return;
+    if (productNameInput === null) {
+      alert("Silme işlemi iptal edildi.");
+      return;
     }
     if (productNameInput !== p.name) {
       alert("Ürün adı eşleşmedi, silme işlemi iptal edildi.");
@@ -54,9 +53,8 @@ export default function AdminProductsList() {
     }
   };
 
-  // YENİ FONKSİYON: Yeni Kategori Oluşturma
   const handleCreateCategory = async () => {
-    setCategoryMessage(null); // Önceki mesajları temizle
+    setCategoryMessage(null);
     const categoryName = window.prompt("Yeni kategori adını girin:");
     if (!categoryName || categoryName.trim() === "") {
       alert("Kategori adı boş olamaz.");
@@ -74,9 +72,6 @@ export default function AdminProductsList() {
       const response = await categoryService.createCategory(newCategory);
       setCategoryMessageType("success");
       setCategoryMessage(`Kategori "${response.data.name}" başarıyla oluşturuldu!`);
-      // Kategori listesini veya ürün ekleme/düzenleme formundaki kategori seçeneklerini
-      // güncellemek için burada ek bir işlem yapılabilir (örn: kategori listesini yeniden yükleme).
-      // Şimdilik sadece bir mesaj gösteriyoruz.
     } catch (error: any) {
       console.error("Kategori oluşturulurken hata:", error);
       setCategoryMessageType("danger");
@@ -90,7 +85,6 @@ export default function AdminProductsList() {
     <Container className="my-4">
       <h2 className="mb-3">Ürün Yönetimi</h2>
       
-      {/* Kategori oluşturma mesajı için Alert */}
       {categoryMessage && (
         <Alert variant={categoryMessageType} onClose={() => setCategoryMessage(null)} dismissible>
           {categoryMessage}
@@ -107,20 +101,19 @@ export default function AdminProductsList() {
         </div>
       ) : (
         <>
-          <div className="mb-3"> {/* Butonları bir div içine aldık */}
+          <div className="mb-3">
             <Button className="me-2" onClick={() => { setEditing(null); setShowModal(true); }}>
               Yeni Ürün
             </Button>
             <Button variant="secondary" className="me-2" onClick={() => setShowBulkModal(true)}>
               Toplu Ürün Ekle
             </Button>
-            {/* YENİ BUTON: Yeni Kategori Ekle */}
             <Button variant="info" onClick={handleCreateCategory}>
               Yeni Kategori Ekle
             </Button>
           </div>
 
-          <Table bordered hover responsive> {/* responsive eklendi */}
+          <Table bordered hover responsive>
             <thead>
               <tr>
                 <th>ID</th>
@@ -128,8 +121,6 @@ export default function AdminProductsList() {
                 <th>Fiyat</th>
                 <th>Stok</th>
                 <th>Görünür</th>
-                {/* Kategori sütunu ileride eklenebilir */}
-                {/* <th>Kategori</th> */}
                 <th>İşlemler</th>
               </tr>
             </thead>
@@ -141,12 +132,11 @@ export default function AdminProductsList() {
                   <td>{p.price ? parseFloat(p.price).toFixed(2) : "N/A"}</td>
                   <td>{p.stock}</td>
                   <td>{p.is_visible ? "Evet" : "Hayır"}</td>
-                  {/* <td>{p.category ? p.category.name : "-"}</td>  Eğer ProductOut category içeriyorsa */}
                   <td>
                     <Button 
                       size="sm" 
                       variant="outline-primary" 
-                      className="me-1 mb-1 mb-md-0" /* Mobil için alt marjin */
+                      className="me-1 mb-1 mb-md-0"
                       onClick={() => { setEditing(p); setShowModal(true); }}
                     >
                       Düzenle
@@ -154,7 +144,7 @@ export default function AdminProductsList() {
                     <Button 
                       size="sm" 
                       variant="outline-danger" 
-                      className="mb-1 mb-md-0" /* Mobil için alt marjin */
+                      className="mb-1 mb-md-0"
                       onClick={() => handleDelete(p)}
                     >
                       Sil
@@ -165,15 +155,13 @@ export default function AdminProductsList() {
             </tbody>
           </Table>
 
-          {/* Tekil Ürün Ekleme/Düzenleme Modalı */}
           {showModal && (
             <ProductFormModal
-              product={editing ?? undefined} // editing null ise undefined gönder
+              product={editing ?? undefined}
               onClose={() => { setShowModal(false); reloadProducts(); }}
             />
           )}
 
-          {/* Toplu Ürün Ekleme Modalı */}
           {showBulkModal && (
             <BulkProductModal
               onClose={() => setShowBulkModal(false)}

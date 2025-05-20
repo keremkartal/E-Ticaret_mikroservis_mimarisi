@@ -20,14 +20,13 @@ export default function Profile() {
     username: "",
     email: "",
     roles: [],
-    must_change: 0, // Eksik alanı ekleyin
-    is_active: true // Backend şemasına göre gerekliyse ekleyin
+    must_change: 0, 
+    is_active: true 
   });
   const [roles, setRoles] = useState<string[]>([]);
   const [perms, setPerms] = useState<string[]>([]);
 
-  // form durumları
-  const [profile, setProfile] = useState<UserOut | null>(null); // Üst kısma ekleyin
+  const [profile, setProfile] = useState<UserOut | null>(null);
 
   const [updUsername, setUpdUsername] = useState("");
   const [updEmail, setUpdEmail] = useState("");
@@ -41,7 +40,6 @@ export default function Profile() {
 
   const nav = useNavigate();
 
-  // ilk veri yükleme
   useEffect(() => {
     userService.getMe().then(r => {
       setProfile(r.data);
@@ -52,7 +50,6 @@ export default function Profile() {
     userService.getMyPermissions().then(r => setPerms(r.data));
   }, []);
 
-  // 1) Profil güncelle
   const submitProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -64,7 +61,6 @@ export default function Profile() {
     }
   };
 
-  // 2) Şifre değiştir
   const submitPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -77,7 +73,6 @@ export default function Profile() {
     }
   };
 
-  // 3) Hesabı pasifleştir
   const submitDeactivate = async () => {
     if (!confirm("Are you sure you want to deactivate your account?")) return;
     try {
@@ -89,7 +84,6 @@ export default function Profile() {
     }
   };
 
-  // 4) Rol kontrolü
   const checkRoleHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = await userService.hasRole(checkRole);

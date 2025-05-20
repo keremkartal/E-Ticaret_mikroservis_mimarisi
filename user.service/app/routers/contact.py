@@ -16,7 +16,6 @@ def list_contacts(
     current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """List all contacts of the current user."""
     return crud_contact.list_by_user(db, current_user.id)
 
 @router.post("/", response_model=ContactSchema, status_code=status.HTTP_201_CREATED)
@@ -25,7 +24,6 @@ def create_contact(
     current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Create a new contact for the current user."""
     return crud_contact.create(db, user_id=current_user.id, obj_in=contact_in)
 
 @router.get("/{contact_id}", response_model=ContactSchema)
@@ -65,7 +63,6 @@ def delete_contact(
     current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Delete a contact."""
     contact = crud_contact.get(db, contact_id)
     if not contact or contact.user_id != current_user.id:
         raise HTTPException(

@@ -22,7 +22,7 @@ Proje, modüler bir yaklaşımla aşağıdaki ana klasörlerden oluşmaktadır:
 * **`user.service/`**: Kullanıcı kaydı, girişi, kimlik doğrulama, yetkilendirme, profil, adres ve iletişim bilgileri gibi kullanıcı odaklı tüm işlemleri yöneten FastAPI tabanlı mikroservis.
 * **`product.service/`**: Ürünler, kategoriler, alışveriş sepeti ve siparişlerle ilgili tüm e-ticaret fonksiyonlarını yöneten FastAPI tabanlı mikroservis.
 * **`frontend/`**: React ve TypeScript kullanılarak geliştirilmiş, kullanıcı dostu ve interaktif web arayüzü.
-* **`docker-compose.yml`**: Tüm servislerin (backend API'leri, frontend uygulaması ve PostgreSQL veritabanları) Docker container'ları olarak tanımlandığı, yapılandırıldığı ve yönetildiği ana yapılandırma dosyası. [cite: 6]
+* **`docker-compose.yml`**: Tüm servislerin (backend API'leri, frontend uygulaması ve PostgreSQL veritabanları) Docker container'ları olarak tanımlandığı, yapılandırıldığı ve yönetildiği ana yapılandırma dosyası. 
 * Her servis kendi `Dockerfile` dosyasına sahiptir, bu da servislerin bağımsız olarak build edilmesini ve containerize edilmesini sağlar.
 
 ##  Kurulum ve Çalıştırma Adımları
@@ -61,7 +61,7 @@ Bu işlem, özellikle ilk çalıştırmada imajların indirilmesi ve build edilm
 `docker-compose up --build -d` komutu çalıştıktan sonra: 
 
   * PostgreSQL veritabanları (`user_db`, `product_db`) otomatik olarak oluşturulur. 
-  * `user.service` başlatılırken, `entrypoint.sh` betiği aracılığıyla Alembic veritabanı migration'ları uygulanır ve varsayılan bir admin kullanıcısı (`username: admin`, `password: Admin123!`) oluşturulur. [cite: 26]
+  * `user.service` başlatılırken, `entrypoint.sh` betiği aracılığıyla Alembic veritabanı migration'ları uygulanır ve varsayılan bir admin kullanıcısı (`username: admin`, `password: Admin123!`) oluşturulur. 
   * `product.service` (eğer `entrypoint.sh` ile Alembic migration'ları tanımlandıysa) ve `frontend` servisleri de başlatılır. 
 
 Servislerin durumunu ve loglarını kontrol etmek için: 
@@ -106,7 +106,7 @@ docker-compose down --volumes
 Projenin backend servisleri tarafından sunulan API endpoint'lerinin detaylı listesi ve açıklamaları için lütfen servislerin Swagger dokümantasyonlarına başvurun:
 
   * **User Service Swagger UI:** [`http://localhost:8000/docs`](https://www.google.com/search?q=http://localhost:8000/docs) 
-  * **Product Service Swagger UI:** [`http://localhost:8001/docs`](https://www.google.com/search?q=http://localhost:8001/docs) [cite: 29]
+  * **Product Service Swagger UI:** [`http://localhost:8001/docs`](https://www.google.com/search?q=http://localhost:8001/docs) 
 
 Bu arayüzler üzerinden tüm endpoint'leri interaktif olarak test edebilir ve detaylı istek/yanıt şemalarını inceleyebilirsiniz.
 
